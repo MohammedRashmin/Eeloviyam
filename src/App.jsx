@@ -186,15 +186,14 @@ function Hero() {
       onMouseMove={onMove}>
 
       {/* Left art image — absolute, does not affect text layout */}
-      <div className="absolute left-0 bottom-0 h-full hidden md:flex items-end pointer-events-none"
+      <div className="absolute left-0 bottom-0 h-full flex items-end pointer-events-none"
         style={{ animation: 'fadeUp 1.2s ease 0.5s both' }}>
-        {/* Gradient colour wash behind the art */}
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at 30% 60%, rgba(180,83,9,0.18) 0%, rgba(217,119,6,0.08) 50%, transparent 80%)' }} />
         <img
           src={heroArt}
           alt=""
-          className="h-4/5 w-auto object-contain relative z-10"
+          className="h-2/5 md:h-4/5 w-auto object-contain relative z-10"
           style={{
             filter: 'sepia(95%) saturate(280%) hue-rotate(-20deg) brightness(0.78) contrast(1.2) drop-shadow(0 0 32px rgba(180,83,9,0.55)) drop-shadow(0 0 10px rgba(253,186,116,0.28))',
             opacity: 0.9,
@@ -203,18 +202,18 @@ function Hero() {
       </div>
 
       {/* First butterfly — upper right */}
-      <img src={butterflyArt} alt="" className="hidden md:block absolute pointer-events-none"
+      <img src={butterflyArt} alt="" className="absolute pointer-events-none"
         style={{
-          right: '2rem', top: '12%', height: '18%', width: 'auto',
+          right: '0.5rem', top: '12%', height: '12%', width: 'auto',
           filter: 'sepia(95%) saturate(280%) hue-rotate(-20deg) brightness(0.78) contrast(1.2) drop-shadow(0 0 32px rgba(180,83,9,0.55)) drop-shadow(0 0 10px rgba(253,186,116,0.28))',
           opacity: 0.9, transform: 'scaleX(-1)',
           animation: 'fadeUp 1.2s ease 0.7s both',
         }}
       />
       {/* Second butterfly — lower right, smaller */}
-      <img src={butterflyArt} alt="" className="hidden md:block absolute pointer-events-none"
+      <img src={butterflyArt} alt="" className="absolute pointer-events-none"
         style={{
-          right: '5rem', top: '52%', height: '13%', width: 'auto',
+          right: '3rem', top: '52%', height: '9%', width: 'auto',
           filter: 'sepia(95%) saturate(280%) hue-rotate(-20deg) brightness(0.72) contrast(1.2) drop-shadow(0 0 20px rgba(180,83,9,0.4)) drop-shadow(0 0 8px rgba(253,186,116,0.2))',
           opacity: 0.7, transform: 'scaleX(-1)',
           animation: 'fadeUp 1.2s ease 0.9s both',
