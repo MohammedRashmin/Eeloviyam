@@ -543,10 +543,20 @@ export default function Admin() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
+    if (!supabase) { setChecking(false); return }
     supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setChecking(false) })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s))
     return () => subscription.unsubscribe()
   }, [])
+
+  if (!supabase) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: BG }}>
+      <div className="text-center">
+        <p className="text-red-500 text-sm mb-2">Supabase environment variables not configured.</p>
+        <p className="text-zinc-500 text-xs">Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your hosting platform.</p>
+      </div>
+    </div>
+  )
 
   if (checking) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: BG }}>
