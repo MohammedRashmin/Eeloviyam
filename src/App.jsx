@@ -297,6 +297,21 @@ function StatCounter({ num, suffix, label, active }) {
 
 function About() {
   const [ref, visible] = useScrollReveal()
+  const [data, setData] = useState(null)
+
+  useEffect(() => {
+    import('./supabase').then(({ supabase: sb }) => {
+      sb.from('about').select('*').single().then(({ data }) => { if (data) setData(data) })
+    })
+  }, [])
+
+  const title = data?.title || 'Preserving Culture Through Canvas'
+  const desc = data?.description || 'Eeloviyam — meaning "Eelam Art" in Tamil — was born from a deep reverence for the rich cultural tapestry of Jaffna.'
+  const imgUrl = data?.image_url || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=700&q=80'
+  const years = data?.years_active ?? 6
+  const artworks = data?.artworks_created ?? 200
+  const collectors = data?.collectors ?? 150
+
   return (
     <section id="about" className="py-10 px-6">
       <div ref={ref} className={`max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center transition-all duration-1000 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
@@ -304,12 +319,10 @@ function About() {
         {/* Image block */}
         <div className="relative group">
           <div className="overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=700&q=80" alt="Gallery"
+            <img src={imgUrl} alt="Gallery"
               className="w-full h-[420px] object-cover transition-transform duration-700 group-hover:scale-105" />
           </div>
-          {/* Gold frame offset */}
           <div className="absolute -bottom-4 -right-4 w-full h-full border border-amber-700/30 group-hover:border-amber-500/50 transition-colors duration-500 pointer-events-none" />
-          {/* Badge overlay */}
           <div className="absolute -bottom-5 left-6 bg-amber-400 text-black px-5 py-3">
             <div className="font-serif text-lg font-semibold leading-none">Est. 2018</div>
             <div className="text-xs tracking-widest uppercase mt-0.5 opacity-70">Jaffna, Sri Lanka</div>
@@ -319,30 +332,16 @@ function About() {
         {/* Text block */}
         <div>
           <SectionLabel>Our Story</SectionLabel>
-          <h2 className="font-serif text-4xl md:text-5xl text-white font-semibold mb-4 leading-tight">
-            Preserving Culture<br />Through Canvas
-          </h2>
+          <h2 className="font-serif text-4xl md:text-5xl text-white font-semibold mb-4 leading-tight">{title}</h2>
           <GoldDivider />
-
-          {/* Pull quote */}
           <blockquote className="border-l-2 border-amber-600/50 pl-4 mb-6 italic text-amber-300/60 text-sm leading-relaxed">
             "Every stroke is a declaration that our heritage lives on."
           </blockquote>
-
-          <p className="text-zinc-400 font-light leading-relaxed mb-4 text-sm">
-            Eeloviyam — meaning <span className="text-amber-400/80">"Eelam Art"</span> in Tamil — was born from a deep reverence for the rich cultural
-            tapestry of Jaffna. From the golden gopurams of Nallur to the serene faces of our fishermen,
-            our artists document the soul of the North.
-          </p>
-          <p className="text-zinc-500 font-light leading-relaxed mb-10 text-sm">
-            Each painting is not just art — it is memory, identity, and pride. We work with over 8 local
-            artists to bring authentic Tamil art to collectors worldwide.
-          </p>
-
+          <p className="text-zinc-400 font-light leading-relaxed mb-10 text-sm">{desc}</p>
           <div className="grid grid-cols-3 gap-4 p-6 border border-amber-900/30 bg-amber-950/10">
-            <StatCounter num={8}   suffix="+" label="Artists"  active={visible} />
-            <StatCounter num={200} suffix="+" label="Artworks" active={visible} />
-            <StatCounter num={5}   suffix="★" label="Reviews"  active={visible} />
+            <StatCounter num={years}      suffix="+" label="Years"     active={visible} />
+            <StatCounter num={artworks}   suffix="+" label="Artworks"  active={visible} />
+            <StatCounter num={collectors} suffix="+" label="Collectors" active={visible} />
           </div>
         </div>
       </div>
@@ -372,7 +371,7 @@ function GalleryCard({ item }) {
         transition: hovered ? 'transform 0.08s ease' : 'transform 0.5s ease',
       }}
       className="relative overflow-hidden cursor-pointer group">
-      <img src={item.url} alt={item.title}
+      <img src={item.image_url || item.url} alt={item.title}
         className={`w-full h-72 object-cover transition-transform duration-700 ${hovered ? 'scale-110' : 'scale-100'}`} />
       <div className={`absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-opacity duration-400 ${hovered ? 'opacity-100' : 'opacity-0'}`} />
       <div className={`absolute bottom-0 left-0 right-0 p-5 transition-all duration-400 ${hovered ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
@@ -396,7 +395,21 @@ function GalleryCard({ item }) {
 function Gallery() {
   const [ref, visible] = useScrollReveal()
   const [filter, setFilter] = useState('All')
-  const items = filter === 'All' ? GALLERY : GALLERY.filter(g => g.status === filter)
+  const [allItems, setAllItems] = useState(GALLERY)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    import('./supabase').then(({ supabase: sb }) => {
+      sb.from('artworks').select('*').order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data && data.length > 0)
+            setAllItems(data.map(a => ({ ...a, url: a.image_url })))
+          setLoading(false)
+        })
+    })
+  }, [])
+
+  const items = filter === 'All' ? allItems : allItems.filter(g => g.status === filter)
   return (
     <section id="gallery" className="py-10 px-6">
       <div className="max-w-7xl mx-auto">
@@ -470,6 +483,15 @@ function ServiceCard({ s, i, visible }) {
 
 function Services() {
   const [ref, visible] = useScrollReveal()
+  const [list, setList] = useState(SERVICES)
+
+  useEffect(() => {
+    import('./supabase').then(({ supabase: sb }) => {
+      sb.from('services').select('*').order('sort_order')
+        .then(({ data }) => { if (data && data.length > 0) setList(data.map(s => ({ ...s, num: String(s.sort_order).padStart(2,'0'), desc: s.description }))) })
+    })
+  }, [])
+
   return (
     <section id="services" className="py-10 px-6">
       <div className="max-w-6xl mx-auto">
@@ -480,7 +502,7 @@ function Services() {
           <p className="text-zinc-500 text-sm max-w-md mx-auto">From custom portraits to full interior art curation — we bring Jaffna's art to your world.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {SERVICES.map((s, i) => <ServiceCard key={s.title} s={s} i={i} visible={visible} />)}
+          {list.map((s, i) => <ServiceCard key={s.title} s={s} i={i} visible={visible} />)}
         </div>
       </div>
     </section>
@@ -488,33 +510,117 @@ function Services() {
 }
 
 // ─── Testimonials ─────────────────────────────────────────────────────────────
+function ReviewForm({ onClose }) {
+  const [form, setForm] = useState({ name: '', review: '', stars: 5 })
+  const [status, setStatus] = useState('')
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setStatus('sending')
+    const { supabase: sb } = await import('./supabase')
+    const { error } = await sb.from('testimonials').insert({ ...form, approved: false })
+    setStatus(error ? 'error' : 'done')
+    if (!error) setForm({ name: '', review: '', stars: 5 })
+  }
+
+  return (
+    <div className="border border-amber-900/20 p-8 mt-10" style={{ background: '#0a0805' }}>
+      <div className="flex items-start justify-between mb-1">
+        <h3 className="font-serif text-2xl text-white">Share Your Experience</h3>
+        <button onClick={onClose} className="text-zinc-600 hover:text-zinc-400 text-xl leading-none transition-colors">✕</button>
+      </div>
+      <p className="text-zinc-500 text-xs tracking-widest mb-6">Your review will be visible after approval</p>
+      {status === 'done' ? (
+        <div className="text-center py-6">
+          <div className="text-3xl mb-3">🙏</div>
+          <p className="text-amber-300 text-sm">Thank you! Your review has been submitted.</p>
+          <button onClick={onClose} className="text-zinc-500 text-xs mt-3 underline underline-offset-4">Close</button>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-amber-700/50 text-[10px] tracking-widest uppercase mb-1.5">Your Name</label>
+              <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required
+                className="w-full bg-black/30 border border-amber-900/25 text-white px-4 py-2.5 text-sm outline-none focus:border-amber-700/50 transition-colors"
+                placeholder="e.g. Surya K." />
+            </div>
+            <div>
+              <label className="block text-amber-700/50 text-[10px] tracking-widest uppercase mb-1.5">Rating</label>
+              <div className="flex gap-2 mt-1">
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} type="button" onClick={() => setForm(f => ({ ...f, stars: n }))}
+                    className={`text-xl transition-colors ${n <= form.stars ? 'text-amber-400' : 'text-zinc-700'}`}>★</button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="block text-amber-700/50 text-[10px] tracking-widest uppercase mb-1.5">Your Review</label>
+            <textarea value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))} required rows={3}
+              className="w-full bg-black/30 border border-amber-900/25 text-white px-4 py-2.5 text-sm outline-none focus:border-amber-700/50 transition-colors resize-none"
+              placeholder="Tell us about your experience…" />
+          </div>
+          {status === 'error' && <p className="text-red-400 text-xs">Something went wrong. Please try again.</p>}
+          <button type="submit" disabled={status === 'sending'}
+            className="shimmer-btn relative overflow-hidden px-8 py-3 bg-amber-600 hover:bg-amber-500 text-black text-xs tracking-widest uppercase transition-colors disabled:opacity-50">
+            <span className="shimmer-sweep absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full pointer-events-none" />
+            {status === 'sending' ? 'Submitting…' : 'Submit Review'}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
 function Testimonials() {
   const [ref, visible] = useScrollReveal()
+  const [reviews, setReviews] = useState(TESTIMONIALS)
+  const [showForm, setShowForm] = useState(false)
+  const formRef = useRef(null)
+
+  useEffect(() => {
+    import('./supabase').then(({ supabase: sb }) => {
+      sb.from('testimonials').select('*').eq('approved', true).order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data && data.length > 0)
+            setReviews(data.map(r => ({ name: r.name, text: r.review, stars: r.stars, initials: r.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(), color: 'bg-amber-800' })))
+        })
+    })
+  }, [])
+
+  const handleWriteReview = () => {
+    setShowForm(true)
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }
+
   return (
     <section className="py-10 px-6">
       <div className="max-w-6xl mx-auto">
         <div ref={ref} className={`text-center mb-8 transition-all duration-1000 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-          <SectionLabel>Google Reviews</SectionLabel>
+          <SectionLabel>Customer Reviews</SectionLabel>
           <h2 className="font-serif text-4xl text-white font-semibold">What People Say</h2>
           <GoldDivider />
-          <div className="flex items-center justify-center gap-1 text-amber-400">
-            {'★★★★★'.split('').map((s, i) => <span key={i} className="text-lg">{s}</span>)}
-            <span className="text-zinc-500 text-sm ml-2">5.0 · Verified on Google</span>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <div className="flex items-center gap-1 text-amber-400">
+              {'★★★★★'.split('').map((s, i) => <span key={i} className="text-lg">{s}</span>)}
+              <span className="text-zinc-500 text-sm ml-2">5.0 · Verified Reviews</span>
+            </div>
+            <button onClick={handleWriteReview}
+              className="shimmer-btn relative overflow-hidden border border-amber-600/50 text-amber-400 text-xs tracking-widest uppercase px-5 py-2 hover:bg-amber-600 hover:text-black transition-all duration-300">
+              <span className="shimmer-sweep absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full pointer-events-none" />
+              ✍ Write a Review
+            </button>
           </div>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((t, i) => (
-            <div key={t.name}
+          {reviews.map((t, i) => (
+            <div key={t.name + i}
               className={`group relative border border-zinc-800/80 p-8 transition-all duration-500 hover:-translate-y-2 hover:border-amber-700/40 cursor-default overflow-hidden ${
                 visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
               style={{ transitionDelay: `${i * 150}ms` }}>
-
-              {/* Large decorative quote mark */}
               <span className="absolute top-4 right-6 font-serif text-7xl text-amber-900/15 leading-none select-none pointer-events-none">"</span>
-              {/* Top accent on hover */}
               <div className="absolute top-0 left-0 h-0.5 w-0 bg-amber-500/50 group-hover:w-full transition-all duration-500" />
-
-              {/* Avatar + name */}
               <div className="flex items-center gap-3 mb-5">
                 <div className={`w-10 h-10 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-semibold tracking-wider shrink-0`}>
                   {t.initials}
@@ -524,7 +630,6 @@ function Testimonials() {
                   <div className="text-amber-400 text-xs mt-0.5">{'★'.repeat(t.stars)}</div>
                 </div>
               </div>
-
               <p className="text-zinc-300 font-light italic leading-relaxed text-sm group-hover:text-white transition-colors">
                 "{t.text}"
               </p>
@@ -534,20 +639,35 @@ function Testimonials() {
             </div>
           ))}
         </div>
+
+        {showForm && (
+          <div ref={formRef}>
+            <ReviewForm onClose={() => setShowForm(false)} />
+          </div>
+        )}
       </div>
     </section>
   )
 }
 
 // ─── Contact ─────────────────────────────────────────────────────────────────
+const DEFAULT_CONTACT = [
+  { icon: '📍', label: 'Visit Us',   value: ADDRESS },
+  { icon: '🕐', label: 'Open Hours', value: 'Tue – Sun · 10 AM – 7 PM' },
+  { icon: '📞', label: 'Call Us',    value: '+94 77 123 4567' },
+  { icon: '✉️', label: 'Email',      value: 'hello@eeloviyam.art' },
+]
 function Contact() {
   const [ref, visible] = useScrollReveal()
-  const details = [
-    { icon: '📍', label: 'Visit Us',    value: ADDRESS },
-    { icon: '🕐', label: 'Open Hours', value: 'Tue – Sun · 10 AM – 7 PM' },
-    { icon: '📞', label: 'Call Us',    value: '+94 77 123 4567' },
-    { icon: '✉️', label: 'Email',      value: 'hello@eeloviyam.art' },
-  ]
+  const [details, setDetails] = useState(DEFAULT_CONTACT)
+
+  useEffect(() => {
+    import('./supabase').then(({ supabase }) =>
+      supabase.from('contact').select('*').order('sort_order').then(({ data }) => {
+        if (data && data.length > 0) setDetails(data)
+      })
+    )
+  }, [])
   return (
     <section id="contact" className="py-10 px-6">
       <div ref={ref} className={`max-w-5xl mx-auto transition-all duration-1000 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
