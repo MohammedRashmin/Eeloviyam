@@ -5,6 +5,8 @@ import { supabase } from './supabase'
 const BG      = 'linear-gradient(135deg, #fffdf8 0%, #fdf6e8 50%, #faf0d7 100%)'
 const CARD_BG = '#ffffff'
 const STATUSES = ['Available', 'Commission', 'Sold']
+const CATEGORIES = ['Pencils', 'Sketch Boards', 'Brushes', 'Paints', 'Paper', 'Other']
+const STOCK_STATUSES = ['In Stock', 'Out of Stock']
 
 function Field({ label, children }) {
   return (
@@ -74,16 +76,55 @@ function ImageUpload({ current, onUploaded }) {
     <div className="border-2 border-dashed border-amber-200 p-4 text-center cursor-pointer hover:border-amber-400 transition-colors rounded-lg bg-amber-50/50"
       onClick={() => document.getElementById('img-upload').click()}>
       {current
-        ? <img src={current} alt="" className="mx-auto max-h-36 object-contain rounded" />
+        ? <img src={current} alt="" className="mx-auto max-h-36 max-w-48 object-contain rounded" />
         : <div className="text-zinc-400 text-xs py-6">{uploading ? 'Uploading…' : '📷 Click to upload image'}</div>}
       <input id="img-upload" type="file" accept="image/*" onChange={handle} className="hidden" />
     </div>
   )
 }
 
+// ─── Multi-image uploader (extra angles/detail shots) ─────────────────────────
+function MultiImageUpload({ urls, onChange }) {
+  const [uploading, setUploading] = useState(false)
+
+  const addFile = async (e) => {
+    const file = e.target.files[0]; if (!file) return
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const name = `${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('artwork-images').upload(name, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('artwork-images').getPublicUrl(name)
+      onChange([...urls, data.publicUrl])
+    }
+    setUploading(false)
+    e.target.value = ''
+  }
+
+  const remove = (i) => onChange(urls.filter((_, idx) => idx !== i))
+
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {urls.map((u, i) => (
+        <div key={u + i} className="relative group">
+          <img src={u} alt="" className="w-full h-16 object-cover rounded border border-amber-200" />
+          <button type="button" onClick={() => remove(i)}
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            ✕
+          </button>
+        </div>
+      ))}
+      <label className="w-full h-16 border-2 border-dashed border-amber-200 rounded flex items-center justify-center cursor-pointer hover:border-amber-400 transition-colors text-zinc-400 text-xs text-center px-1">
+        {uploading ? '…' : '+ Add'}
+        <input type="file" accept="image/*" onChange={addFile} className="hidden" />
+      </label>
+    </div>
+  )
+}
+
 // ─── TAB: Artworks ────────────────────────────────────────────────────────────
 function ArtworkModal({ artwork, onSave, onClose }) {
-  const [form, setForm] = useState(artwork || { title: '', medium: '', price: '', status: 'Available', image_url: '' })
+  const [form, setForm] = useState(artwork || { title: '', medium: '', price: '', status: 'Available', image_url: '', description: '', dimensions: '', year_created: '', image_urls: [], featured: false })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
 
@@ -108,16 +149,30 @@ function ArtworkModal({ artwork, onSave, onClose }) {
         <Field label="Artwork Image">
           <ImageUpload current={form.image_url} onUploaded={url => setForm(f => ({ ...f, image_url: url }))} />
         </Field>
+        <Field label="Additional Images (optional)">
+          <MultiImageUpload urls={form.image_urls || []} onChange={urls => setForm(f => ({ ...f, image_urls: urls }))} />
+        </Field>
         <Field label="Title"><input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required className={inputCls} placeholder="e.g. Nallur at Dusk" /></Field>
         <Field label="Medium"><input value={form.medium} onChange={e => setForm(f => ({ ...f, medium: e.target.value }))} required className={inputCls} placeholder="e.g. Oil on Canvas" /></Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Price"><input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required className={inputCls} placeholder="₹18,000" /></Field>
+          <Field label="Price"><input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required className={inputCls} placeholder="Rs 18,000" /></Field>
           <Field label="Status">
             <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={inputCls}>
               {STATUSES.map(s => <option key={s}>{s}</option>)}
             </select>
           </Field>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Dimensions"><input value={form.dimensions || ''} onChange={e => setForm(f => ({ ...f, dimensions: e.target.value }))} className={inputCls} placeholder='e.g. 24 x 36 in' /></Field>
+          <Field label="Year Created"><input type="number" value={form.year_created || ''} onChange={e => setForm(f => ({ ...f, year_created: e.target.value ? +e.target.value : null }))} className={inputCls} placeholder="2024" /></Field>
+        </div>
+        <Field label="Description">
+          <textarea value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="Story behind the piece, techniques used, inspiration…" />
+        </Field>
+        <label className="flex items-center gap-2 cursor-pointer w-fit">
+          <input type="checkbox" checked={!!form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} className="w-4 h-4 accent-amber-600" />
+          <span className="text-zinc-700 text-sm">Featured — show in "Selected Works" on the homepage</span>
+        </label>
         {err && <p className="text-red-500 text-xs">{err}</p>}
         <ModalActions onClose={onClose} saving={saving} />
       </form>
@@ -151,7 +206,10 @@ function ArtworksTab() {
       {loading ? <Loading /> : list.length === 0 ? <Empty label="No artworks yet" onAdd={() => setModal({})} /> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {list.map(a => (
-            <div key={a.id} className="border border-amber-100 overflow-hidden group rounded-lg shadow-sm" style={{ background: CARD_BG }}>
+            <div key={a.id} className="relative border border-amber-100 overflow-hidden group rounded-lg shadow-sm" style={{ background: CARD_BG }}>
+              {a.featured && (
+                <span className="absolute top-2 left-2 z-10 bg-amber-400 text-black text-[10px] font-medium tracking-wide px-2 py-0.5 rounded-full shadow-sm">★ Featured</span>
+              )}
               <div className="aspect-[4/3] bg-amber-50 overflow-hidden">
                 {a.image_url
                   ? <img src={a.image_url} alt={a.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -175,6 +233,114 @@ function ArtworksTab() {
       )}
       {modal !== null && <ArtworkModal artwork={modal.id ? modal : null} onSave={() => { setModal(null); load() }} onClose={() => setModal(null)} />}
       {delId && <Confirm msg="Delete this artwork? This cannot be undone." onConfirm={del} onCancel={() => setDelId(null)} />}
+    </div>
+  )
+}
+
+// ─── TAB: Shop (art supplies) ──────────────────────────────────────────────────
+function ProductModal({ product, onSave, onClose }) {
+  const [form, setForm] = useState(product || { name: '', category: 'Other', price: '', stock: 'In Stock', image_url: '', image_urls: [], description: '' })
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+
+  const save = async (e) => {
+    e.preventDefault(); setSaving(true); setErr('')
+    try {
+      if (product?.id) {
+        const { error } = await supabase.from('products').update(form).eq('id', product.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('products').insert(form)
+        if (error) throw error
+      }
+      onSave()
+    } catch (e) { setErr(e.message) }
+    setSaving(false)
+  }
+
+  return (
+    <Modal onClose={onClose} title={product ? 'Edit Product' : 'Add Product'}>
+      <form onSubmit={save} className="space-y-4">
+        <Field label="Product Image">
+          <ImageUpload current={form.image_url} onUploaded={url => setForm(f => ({ ...f, image_url: url }))} />
+        </Field>
+        <Field label="Additional Images (optional)">
+          <MultiImageUpload urls={form.image_urls || []} onChange={urls => setForm(f => ({ ...f, image_urls: urls }))} />
+        </Field>
+        <Field label="Name"><input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required className={inputCls} placeholder="e.g. Graphite Pencil Set (12pc)" /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Category">
+            <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={inputCls}>
+              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+            </select>
+          </Field>
+          <Field label="Stock">
+            <select value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} className={inputCls}>
+              {STOCK_STATUSES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </Field>
+        </div>
+        <Field label="Price"><input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required className={inputCls} placeholder="Rs 1,500" /></Field>
+        <Field label="Description">
+          <textarea value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="Details, materials, what's included…" />
+        </Field>
+        {err && <p className="text-red-500 text-xs">{err}</p>}
+        <ModalActions onClose={onClose} saving={saving} />
+      </form>
+    </Modal>
+  )
+}
+
+function ProductsTab() {
+  const [list, setList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState(null)
+  const [delId, setDelId] = useState(null)
+
+  const load = async () => {
+    setLoading(true)
+    const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false })
+    setList(data || []); setLoading(false)
+  }
+  useEffect(() => { load() }, [])
+
+  const del = async () => {
+    await supabase.from('products').delete().eq('id', delId)
+    setDelId(null); load()
+  }
+
+  const stockColor = s => s === 'In Stock' ? 'text-emerald-600' : 'text-red-500'
+
+  return (
+    <div>
+      <TabHeader title="Shop" count={list.length} onAdd={() => setModal({})} />
+      {loading ? <Loading /> : list.length === 0 ? <Empty label="No products yet" onAdd={() => setModal({})} /> : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {list.map(p => (
+            <div key={p.id} className="relative border border-amber-100 overflow-hidden group rounded-lg shadow-sm" style={{ background: CARD_BG }}>
+              <div className="aspect-[4/3] bg-amber-50 overflow-hidden">
+                {p.image_url
+                  ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  : <div className="w-full h-full flex items-center justify-center text-zinc-300 text-xs">No image</div>}
+              </div>
+              <div className="p-4">
+                <p className="text-zinc-800 text-sm font-medium mb-0.5" style={{ fontFamily: 'Playfair Display, serif' }}>{p.name}</p>
+                <p className="text-zinc-500 text-xs mb-2">{p.category}</p>
+                <div className="flex justify-between mb-3">
+                  <span className="text-amber-600 text-xs font-medium">{p.price}</span>
+                  <span className={`text-xs ${stockColor(p.stock)}`}>{p.stock}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setModal(p)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-amber-200 text-xs uppercase py-1.5 rounded transition-colors">Edit</button>
+                  <button onClick={() => setDelId(p.id)} className="flex-1 bg-red-900 hover:bg-red-800 border border-red-700 text-red-200 text-xs uppercase py-1.5 rounded transition-colors">Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {modal !== null && <ProductModal product={modal.id ? modal : null} onSave={() => { setModal(null); load() }} onClose={() => setModal(null)} />}
+      {delId && <Confirm msg="Delete this product? This cannot be undone." onConfirm={del} onCancel={() => setDelId(null)} />}
     </div>
   )
 }
@@ -218,6 +384,51 @@ function AboutTab() {
           <Field label="Artworks Created"><input type="number" value={form.artworks_created || ''} onChange={e => setForm(f => ({ ...f, artworks_created: +e.target.value }))} className={inputCls} /></Field>
           <Field label="Collectors"><input type="number" value={form.collectors || ''} onChange={e => setForm(f => ({ ...f, collectors: +e.target.value }))} className={inputCls} /></Field>
         </div>
+        <div className="flex items-center gap-4">
+          <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Saving…' : 'Save Changes'}</button>
+          {saved && <span className="text-emerald-600 text-xs">✓ Saved successfully</span>}
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// ─── TAB: Artist ──────────────────────────────────────────────────────────────
+function ArtistTab() {
+  const [form, setForm] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    supabase.from('artist').select('*').single().then(({ data }) => setForm(data || {}))
+  }, [])
+
+  const save = async (e) => {
+    e.preventDefault(); setSaving(true)
+    const { id, ...rest } = form
+    if (id) await supabase.from('artist').update({ ...rest, updated_at: new Date().toISOString() }).eq('id', id)
+    else await supabase.from('artist').insert(rest)
+    setSaving(false); setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+  }
+
+  if (!form) return <Loading />
+
+  return (
+    <div className="max-w-2xl">
+      <TabHeader title="Artist" />
+      <form onSubmit={save} className="space-y-5">
+        <Field label="Photo">
+          <ImageUpload current={form.photo_url} onUploaded={url => setForm(f => ({ ...f, photo_url: url }))} />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Name"><input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} placeholder="Your Name" /></Field>
+          <Field label="Role / Title"><input value={form.role || ''} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={inputCls} placeholder="Founder & Artist" /></Field>
+        </div>
+        <Field label="Bio">
+          <textarea value={form.bio || ''} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={6} className={`${inputCls} resize-none`} placeholder="Your story, inspiration, style… (separate paragraphs with a blank line)" />
+        </Field>
+        <Field label="Years Active"><input type="number" value={form.years_active || ''} onChange={e => setForm(f => ({ ...f, years_active: +e.target.value }))} className={inputCls} /></Field>
         <div className="flex items-center gap-4">
           <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Saving…' : 'Save Changes'}</button>
           {saved && <span className="text-emerald-600 text-xs">✓ Saved successfully</span>}
@@ -430,7 +641,7 @@ const DEFAULT_CONTACT_ROWS = [
   { icon: '📍', label: 'Visit Us',   value: '183 Navalar Rd, Jaffna, Sri Lanka', sort_order: 1 },
   { icon: '🕐', label: 'Open Hours', value: 'Tue – Sun · 10 AM – 7 PM',         sort_order: 2 },
   { icon: '📞', label: 'Call Us',    value: '+94 77 123 4567',                   sort_order: 3 },
-  { icon: '✉️', label: 'Email',      value: 'hello@eeloviyam.art',               sort_order: 4 },
+  { icon: '✉️', label: 'Email',      value: 'hello@eezhoviyam.art',               sort_order: 4 },
 ]
 
 function ContactTab() {
@@ -493,7 +704,9 @@ function ContactTab() {
 const TABS = [
   { id: 'artworks', label: '🖼 Artworks' },
   { id: 'about',    label: '📖 About Us' },
+  { id: 'artist',   label: '🧑‍🎨 Artist'  },
   { id: 'services', label: '⚙️ Services' },
+  { id: 'shop',     label: '🛍️ Shop'     },
   { id: 'reviews',  label: '⭐ Reviews'  },
   { id: 'contact',  label: '📬 Contact'  },
 ]
@@ -526,10 +739,12 @@ function Dashboard({ onLogout }) {
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {tab === 'artworks' && <ArtworksTab />}
         {tab === 'about'    && <AboutTab />}
+        {tab === 'artist'   && <ArtistTab />}
         {tab === 'services' && <ServicesTab />}
+        {tab === 'shop'     && <ProductsTab />}
         {tab === 'reviews'  && <ReviewsTab />}
         {tab === 'contact'  && <ContactTab />}
       </div>
