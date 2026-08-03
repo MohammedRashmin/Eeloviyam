@@ -342,7 +342,7 @@ function SelectedWorks() {
           <div>
             <SectionLabel>Portfolio</SectionLabel>
             <h2 className="font-serif text-3xl md:text-4xl font-semibold mb-2" style={{ color: '#241A12' }}>Selected Works</h2>
-            <p className="text-zinc-600 text-sm max-w-md">A curated look at our finest pieces — each one hand-picked to capture the soul of Sri Lankan art.</p>
+            <p className="text-zinc-600 text-sm max-w-md">A curated look at our finest pieces - each one hand-picked to capture the soul of Sri Lankan art.</p>
           </div>
           <a href="#gallery" className="group flex items-center gap-3 text-amber-700 text-xs tracking-widest uppercase hover:text-amber-800 transition-colors shrink-0">
             View Collection
@@ -450,7 +450,7 @@ function ArtistStory() {
 
   const name = data?.name || 'The Artist Behind Eezhoviyam'
   const role = data?.role || 'Founder & Artist'
-  const bio = data?.bio || 'Born with a deep passion for colour and form, I have dedicated my life to capturing the soul of Sri Lanka through paint. Each canvas holds a piece of home.\n\nMy work draws from the temples, the fishermen, and the quiet dignity of everyday life across the island — painted so the stories are never forgotten.'
+  const bio = data?.bio || 'Born with a deep passion for colour and form, I have dedicated my life to capturing the soul of Sri Lanka through paint. Each canvas holds a piece of home.\n\nMy work draws from the temples, the fishermen, and the quiet dignity of everyday life across the island - painted so the stories are never forgotten.'
   const photoUrl = data?.photo_url || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=700&q=80'
   const years = data?.years_active ?? 3
   const paragraphs = bio.split(/\n+/).filter(Boolean)
@@ -493,7 +493,6 @@ function ArtistStory() {
 
 // ─── Gallery ─────────────────────────────────────────────────────────────────
 const FILTERS = ['All', 'Available', 'Commission', 'Sold']
-export const PRODUCT_CATEGORIES = ['All', 'Pencils', 'Sketch Boards', 'Brushes', 'Paints', 'Paper', 'Other']
 
 function GalleryCard({ item, onOpen }) {
   const cardRef = useRef(null)
@@ -638,7 +637,7 @@ function Gallery() {
           <SectionLabel>Our Works</SectionLabel>
           <h2 className="font-serif text-3xl md:text-4xl font-semibold" style={{ color: '#241A12' }}>The Collection</h2>
           <GoldDivider />
-          <p className="text-zinc-600 text-sm max-w-md mx-auto">Each piece is an original work — painted by hand, rooted in Tamil culture.</p>
+          <p className="text-zinc-600 text-sm max-w-md mx-auto">Each piece is an original work - painted by hand, rooted in Tamil culture.</p>
         </div>
 
         {/* Filter tabs */}
@@ -677,13 +676,13 @@ function Gallery() {
 }
 
 // ─── Shop (art supplies) ───────────────────────────────────────────────────────
-export function ProductCard({ product, onOpen }) {
+export function ProductCard({ product, onOpen, boxed = false }) {
   const [activeImg, setActiveImg] = useState(0)
   const images = [product.image_url, ...(product.image_urls || [])].filter(Boolean)
   const outOfStock = product.stock === 'Out of Stock'
 
   return (
-    <div className="group">
+    <div className={`group ${boxed ? 'bg-white border border-amber-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300' : ''}`}>
       <div className="relative aspect-square overflow-hidden cursor-pointer bg-[#FBF7EF]"
         onClick={() => onOpen({ ...product, title: product.name, medium: product.category }, activeImg)}>
         <img src={images[activeImg]} alt={product.name}
@@ -703,7 +702,7 @@ export function ProductCard({ product, onOpen }) {
           </div>
         )}
       </div>
-      <div className="pt-4">
+      <div className={boxed ? 'p-4' : 'pt-4'}>
         <h3 className="font-serif text-lg font-semibold" style={{ color: '#241A12' }}>{product.name}</h3>
         <p className="text-amber-700 text-xs tracking-wide uppercase mt-1">{product.category}</p>
         <div className="flex items-center justify-between mt-2">
@@ -712,7 +711,7 @@ export function ProductCard({ product, onOpen }) {
             onClick={e => e.stopPropagation()}
             className="inline-flex items-center gap-1.5 border border-amber-400 text-amber-700 text-[10px] tracking-widest uppercase px-3 py-1.5 hover:bg-amber-400 hover:text-black transition-all duration-300">
             <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current"><path d={WA_PATH} /></svg>
-            Enquire
+            Buy
           </a>
         </div>
       </div>
@@ -728,7 +727,7 @@ function ShopTeaser() {
 
   useEffect(() => {
     import('./supabase').then(({ supabase: sb }) => {
-      sb.from('products').select('*').order('created_at', { ascending: false }).limit(6)
+      sb.from('products').select('*').order('created_at', { ascending: false }).limit(5)
         .then(({ data }) => { setItems(data || []); setLoading(false) })
     })
   }, [])
@@ -740,7 +739,7 @@ function ShopTeaser() {
           <div>
             <SectionLabel>Art Supplies</SectionLabel>
             <h2 className="font-serif text-3xl md:text-4xl font-semibold mb-2" style={{ color: '#241A12' }}>Drawing Tools & Supplies</h2>
-            <p className="text-zinc-600 text-sm max-w-md">From pencils to sketch boards — everything you need to bring your ideas to life.</p>
+            <p className="text-zinc-600 text-sm max-w-md">From pencils to sketch boards - everything you need to bring your ideas to life.</p>
           </div>
           {!loading && items.length > 0 && (
             <a href="/shop" className="group inline-flex items-center gap-2 border border-amber-400 text-amber-700 text-xs tracking-widest uppercase px-5 py-2.5 hover:bg-amber-400 hover:text-black transition-all duration-300 shrink-0">
@@ -753,7 +752,7 @@ function ShopTeaser() {
         {!loading && items.length === 0 ? (
           <p className="text-center text-zinc-500 text-sm py-10">More supplies coming soon — check back shortly.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
             {items.map(p => (
               <ProductCard key={p.id} product={p} onOpen={(item, startIndex) => setLightbox({ item, startIndex })} />
             ))}
@@ -819,7 +818,7 @@ function Services() {
           <SectionLabel>What We Offer</SectionLabel>
           <h2 className="font-serif text-3xl md:text-4xl font-semibold" style={{ color: '#241A12' }}>Our Services</h2>
           <GoldDivider />
-          <p className="text-zinc-600 text-sm max-w-md mx-auto">From custom portraits to full interior art curation — we bring Sri Lanka's art to your world.</p>
+          <p className="text-zinc-600 text-sm max-w-md mx-auto">From custom portraits to full interior art curation - we bring Sri Lanka's art to your world.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {list.map((s, i) => <ServiceCard key={s.title} s={s} i={i} visible={visible} />)}
@@ -899,6 +898,8 @@ function Testimonials() {
   const [reviews, setReviews] = useState(TESTIMONIALS)
   const [showForm, setShowForm] = useState(false)
   const formRef = useRef(null)
+  const scrollRef = useRef(null)
+  const scroll = (dir) => scrollRef.current?.scrollBy({ left: dir * 340, behavior: 'smooth' })
 
   useEffect(() => {
     import('./supabase').then(({ supabase: sb }) => {
@@ -934,31 +935,45 @@ function Testimonials() {
             </button>
           </div>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {reviews.map((t, i) => (
-            <div key={t.name + i}
-              className={`group relative border border-zinc-200 p-8 transition-all duration-500 hover:-translate-y-2 hover:border-amber-500/50 cursor-default overflow-hidden bg-[#FBF7EF] shadow-sm ${
-                visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
-              style={{ transitionDelay: `${i * 150}ms` }}>
-              <span className="absolute top-4 right-6 font-serif text-7xl text-amber-900/10 leading-none select-none pointer-events-none">"</span>
-              <div className="absolute top-0 left-0 h-0.5 w-0 bg-amber-500/60 group-hover:w-full transition-all duration-500" />
-              <div className="flex items-center gap-3 mb-5">
-                <div className={`w-10 h-10 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-semibold tracking-wider shrink-0`}>
-                  {t.initials}
+        <div className="relative">
+          {reviews.length > 3 && (
+            <>
+              <button onClick={() => scroll(-1)} aria-label="Scroll left"
+                className="hidden sm:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[#FBF7EF] border border-amber-300 text-amber-700 items-center justify-center hover:bg-amber-400 hover:text-black transition-colors shadow-sm">
+                ‹
+              </button>
+              <button onClick={() => scroll(1)} aria-label="Scroll right"
+                className="hidden sm:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-[#FBF7EF] border border-amber-300 text-amber-700 items-center justify-center hover:bg-amber-400 hover:text-black transition-colors shadow-sm">
+                ›
+              </button>
+            </>
+          )}
+          <div ref={scrollRef} className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-2">
+            {reviews.map((t, i) => (
+              <div key={t.name + i}
+                className={`group relative border border-zinc-200 p-8 transition-all duration-500 hover:-translate-y-2 hover:border-amber-500/50 cursor-default overflow-hidden bg-[#FBF7EF] shadow-sm shrink-0 w-[320px] ${
+                  visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+                style={{ transitionDelay: `${i * 150}ms` }}>
+                <span className="absolute top-4 right-6 font-serif text-7xl text-amber-900/10 leading-none select-none pointer-events-none">"</span>
+                <div className="absolute top-0 left-0 h-0.5 w-0 bg-amber-500/60 group-hover:w-full transition-all duration-500" />
+                <div className="flex items-center gap-3 mb-5">
+                  <div className={`w-10 h-10 rounded-full ${t.color} flex items-center justify-center text-white text-xs font-semibold tracking-wider shrink-0`}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: '#241A12' }}>{t.name}</p>
+                    <div className="text-amber-500 text-xs mt-0.5">{'★'.repeat(t.stars)}</div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium" style={{ color: '#241A12' }}>{t.name}</p>
-                  <div className="text-amber-500 text-xs mt-0.5">{'★'.repeat(t.stars)}</div>
-                </div>
+                <p className="text-zinc-600 font-light italic leading-relaxed text-sm group-hover:text-zinc-900 transition-colors">
+                  "{t.text}"
+                </p>
+                <p className="text-zinc-400 text-xs tracking-widest uppercase mt-4 group-hover:text-zinc-500 transition-colors">
+                  Verified Review
+                </p>
               </div>
-              <p className="text-zinc-600 font-light italic leading-relaxed text-sm group-hover:text-zinc-900 transition-colors">
-                "{t.text}"
-              </p>
-              <p className="text-zinc-400 text-xs tracking-widest uppercase mt-4 group-hover:text-zinc-500 transition-colors">
-                Verified Review
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {showForm && (
@@ -1055,7 +1070,7 @@ export function Footer() {
           <div>
             <div className="text-zinc-500 text-xs tracking-widest uppercase mb-4">Find Us</div>
             <p className="text-zinc-600 text-xs leading-relaxed mb-2">{ADDRESS}</p>
-            <p className="text-zinc-600 text-xs mb-4">Tue–Sun · 10 AM – 7 PM</p>
+            <p className="text-zinc-600 text-xs mb-4">Mon – Sat · 9 AM – 7 PM</p>
             <div className="flex gap-4">
               {SOCIALS.map(({ key, href, Icon }) => (
                 <a key={key} href={href} aria-label={key}

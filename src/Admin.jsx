@@ -5,7 +5,6 @@ import { supabase } from './supabase'
 const BG      = 'linear-gradient(135deg, #fffdf8 0%, #fdf6e8 50%, #faf0d7 100%)'
 const CARD_BG = '#ffffff'
 const STATUSES = ['Available', 'Commission', 'Sold']
-const CATEGORIES = ['Pencils', 'Sketch Boards', 'Brushes', 'Paints', 'Paper', 'Other']
 const STOCK_STATUSES = ['In Stock', 'Out of Stock']
 
 function Field({ label, children }) {
@@ -204,7 +203,7 @@ function ArtworksTab() {
     <div>
       <TabHeader title="Artworks" count={list.length} onAdd={() => setModal({})} />
       {loading ? <Loading /> : list.length === 0 ? <Empty label="No artworks yet" onAdd={() => setModal({})} /> : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {list.map(a => (
             <div key={a.id} className="relative border border-amber-100 overflow-hidden group rounded-lg shadow-sm" style={{ background: CARD_BG }}>
               {a.featured && (
@@ -238,8 +237,8 @@ function ArtworksTab() {
 }
 
 // ─── TAB: Shop (art supplies) ──────────────────────────────────────────────────
-function ProductModal({ product, onSave, onClose }) {
-  const [form, setForm] = useState(product || { name: '', category: 'Other', price: '', stock: 'In Stock', image_url: '', image_urls: [], description: '' })
+function ProductModal({ product, onSave, onClose, categories }) {
+  const [form, setForm] = useState(product || { name: '', category: categories[0]?.name || '', price: '', stock: 'In Stock', image_url: '', image_urls: [], description: '' })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
 
@@ -271,7 +270,7 @@ function ProductModal({ product, onSave, onClose }) {
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category">
             <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={inputCls}>
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              {categories.map(c => <option key={c.id}>{c.name}</option>)}
             </select>
           </Field>
           <Field label="Stock">
@@ -291,16 +290,50 @@ function ProductModal({ product, onSave, onClose }) {
   )
 }
 
+function CategoryModal({ onSubmit, onClose }) {
+  const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+
+  const save = async (e) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    setSaving(true); setErr('')
+    try {
+      await onSubmit(name.trim())
+    } catch (e) { setErr(e.message) }
+    setSaving(false)
+  }
+
+  return (
+    <Modal onClose={onClose} title="Add Category">
+      <form onSubmit={save} className="space-y-4">
+        <Field label="Category Name">
+          <input autoFocus value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder="e.g. Erasers" />
+        </Field>
+        {err && <p className="text-red-500 text-xs">{err}</p>}
+        <ModalActions onClose={onClose} saving={saving} />
+      </form>
+    </Modal>
+  )
+}
+
 function ProductsTab() {
   const [list, setList] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null)
+  const [catModal, setCatModal] = useState(false)
   const [delId, setDelId] = useState(null)
+  const [delCatId, setDelCatId] = useState(null)
 
   const load = async () => {
     setLoading(true)
-    const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false })
-    setList(data || []); setLoading(false)
+    const [{ data: products }, { data: cats }] = await Promise.all([
+      supabase.from('products').select('*').order('created_at', { ascending: false }),
+      supabase.from('product_categories').select('*').order('sort_order'),
+    ])
+    setList(products || []); setCategories(cats || []); setLoading(false)
   }
   useEffect(() => { load() }, [])
 
@@ -309,13 +342,38 @@ function ProductsTab() {
     setDelId(null); load()
   }
 
+  const addCategory = async (name) => {
+    const { error } = await supabase.from('product_categories').insert({ name, sort_order: categories.length })
+    if (error) throw error
+    setCatModal(false); load()
+  }
+
+  const deleteCategory = async () => {
+    await supabase.from('product_categories').delete().eq('id', delCatId)
+    setDelCatId(null); load()
+  }
+
   const stockColor = s => s === 'In Stock' ? 'text-emerald-600' : 'text-red-500'
 
   return (
     <div>
-      <TabHeader title="Shop" count={list.length} onAdd={() => setModal({})} />
+      <TabHeader title="Shop" count={list.length} onAdd={() => setModal({})}
+        extra={<button onClick={() => setCatModal(true)} className={btnOutline}>+ Add Category</button>} />
+
+      {/* Category manager */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          {categories.map(c => (
+            <span key={c.id} className="group inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-1.5 rounded-full">
+              {c.name}
+              <button onClick={() => setDelCatId(c.id)} className="text-amber-400 hover:text-red-600 transition-colors leading-none">✕</button>
+            </span>
+          ))}
+        </div>
+      )}
+
       {loading ? <Loading /> : list.length === 0 ? <Empty label="No products yet" onAdd={() => setModal({})} /> : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {list.map(p => (
             <div key={p.id} className="relative border border-amber-100 overflow-hidden group rounded-lg shadow-sm" style={{ background: CARD_BG }}>
               <div className="aspect-[4/3] bg-amber-50 overflow-hidden">
@@ -339,8 +397,10 @@ function ProductsTab() {
           ))}
         </div>
       )}
-      {modal !== null && <ProductModal product={modal.id ? modal : null} onSave={() => { setModal(null); load() }} onClose={() => setModal(null)} />}
+      {modal !== null && <ProductModal product={modal.id ? modal : null} categories={categories} onSave={() => { setModal(null); load() }} onClose={() => setModal(null)} />}
+      {catModal && <CategoryModal onSubmit={addCategory} onClose={() => setCatModal(false)} />}
       {delId && <Confirm msg="Delete this product? This cannot be undone." onConfirm={del} onCancel={() => setDelId(null)} />}
+      {delCatId && <Confirm msg="Delete this category? Existing products keep it as text but it won't appear as a filter option anymore." onConfirm={deleteCategory} onCancel={() => setDelCatId(null)} />}
     </div>
   )
 }
@@ -612,13 +672,16 @@ function Confirm({ msg, onConfirm, onCancel }) {
   )
 }
 
-function TabHeader({ title, count, onAdd }) {
+function TabHeader({ title, count, onAdd, extra }) {
   return (
     <div className="flex items-center justify-between mb-6">
       <h2 className="text-zinc-800 text-lg" style={{ fontFamily: 'Playfair Display, serif' }}>
         {title} {count !== undefined && <span className="text-zinc-400 text-sm font-normal">({count})</span>}
       </h2>
-      {onAdd && <button onClick={onAdd} className={btnPrimary}>+ Add</button>}
+      <div className="flex items-center gap-3">
+        {extra}
+        {onAdd && <button onClick={onAdd} className={btnPrimary}>+ Add</button>}
+      </div>
     </div>
   )
 }
