@@ -792,10 +792,10 @@ function Dashboard({ onLogout }) {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-amber-900/30 px-6 flex gap-1" style={{ background: '#2a1a0e' }}>
+      <div className="border-b border-amber-900/30 px-6 flex gap-1 overflow-x-auto no-scrollbar" style={{ background: '#2a1a0e' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`text-xs tracking-wider uppercase px-4 py-3 border-b-2 transition-colors ${tab === t.id ? 'border-amber-400 text-amber-300 font-medium' : 'border-transparent text-amber-700 hover:text-amber-400'}`}>
+            className={`text-xs tracking-wider uppercase px-4 py-3 border-b-2 transition-colors shrink-0 whitespace-nowrap ${tab === t.id ? 'border-amber-400 text-amber-300 font-medium' : 'border-transparent text-amber-700 hover:text-amber-400'}`}>
             {t.label}
           </button>
         ))}
