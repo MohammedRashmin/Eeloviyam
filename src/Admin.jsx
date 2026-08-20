@@ -55,7 +55,7 @@ function LoginPage() {
 }
 
 // ─── Image uploader ───────────────────────────────────────────────────────────
-function ImageUpload({ current, onUploaded }) {
+function ImageUpload({ current, onUploaded, placeholder = '📷 Click to upload image' }) {
   const [uploading, setUploading] = useState(false)
 
   const handle = async (e) => {
@@ -76,7 +76,7 @@ function ImageUpload({ current, onUploaded }) {
       onClick={() => document.getElementById('img-upload').click()}>
       {current
         ? <img src={current} alt="" className="mx-auto max-h-36 max-w-48 object-contain rounded" />
-        : <div className="text-zinc-400 text-xs py-6">{uploading ? 'Uploading…' : '📷 Click to upload image'}</div>}
+        : <div className="text-zinc-400 text-xs py-6">{uploading ? 'Uploading…' : placeholder}</div>}
       <input id="img-upload" type="file" accept="image/*" onChange={handle} className="hidden" />
     </div>
   )
@@ -476,14 +476,15 @@ function ArtistTab() {
 
   return (
     <div className="max-w-2xl">
-      <TabHeader title="Artist" />
+      <TabHeader title="About Our Collective & Community" />
       <form onSubmit={save} className="space-y-5">
-        <Field label="Photo">
-          <ImageUpload current={form.photo_url} onUploaded={url => setForm(f => ({ ...f, photo_url: url }))} />
+        <Field label="Team / Community Photo">
+          <ImageUpload current={form.photo_url} onUploaded={url => setForm(f => ({ ...f, photo_url: url }))}
+            placeholder="Click to upload team photo or community banner" />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Name"><input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} placeholder="Your Name" /></Field>
-          <Field label="Role / Title"><input value={form.role || ''} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={inputCls} placeholder="Founder & Artist" /></Field>
+          <Field label="Community / Team Name"><input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputCls} placeholder="Oviyam Artist Collective" /></Field>
+          <Field label="Short Tagline"><input value={form.role || ''} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={inputCls} placeholder="Empowering Artists & Building Real-World Creative Connections" /></Field>
         </div>
         <Field label="Bio">
           <textarea value={form.bio || ''} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={6} className={`${inputCls} resize-none`} placeholder="Your story, inspiration, style… (separate paragraphs with a blank line)" />

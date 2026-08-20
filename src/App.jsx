@@ -71,7 +71,6 @@ function useCountUp(end, active) {
 // ─── Global CSS ───────────────────────────────────────────────────────────────
 export const GLOBAL_CSS = `
   @keyframes fadeUp    { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:translateY(0) } }
-  @keyframes frameDrop { from { opacity:0; transform:translateY(-50px) rotate(var(--rot, 0deg)) } to { opacity:1; transform:translateY(0) rotate(var(--rot, 0deg)) } }
   @keyframes shimmer   { from { transform:translateX(-150%) skewX(-20deg) } to { transform:translateX(350%) skewX(-20deg) } }
   @keyframes pulse-ring { 0% { transform:scale(1); opacity:.6 } 100% { transform:scale(1.8); opacity:0 } }
   @keyframes bounce-y  { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-5px) } }
@@ -167,7 +166,7 @@ export function Navbar({ solid = false }) {
     return () => window.removeEventListener('scroll', fn)
   }, [])
   const isSolid = solid || scrolled
-  const links = ['Home', 'Gallery', 'Shop', 'About', 'Services', 'Contact']
+  const links = ['Home', 'Gallery', 'Shop', 'About', 'Artist', 'Services', 'Contact']
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isSolid ? 'bg-[#1a1208]/95 backdrop-blur-md shadow-lg shadow-black/40' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -259,32 +258,6 @@ function Hero() {
           animation: 'fadeUp 1.2s ease 0.9s both',
         }}
       />
-
-      {/* Scattered empty frames — decorative, evokes framed artworks */}
-      <div className="absolute pointer-events-none hidden sm:block" style={{
-        top: '9%', left: '9%', width: '110px', height: '145px', borderRadius: '10px',
-        border: '1px solid rgba(217,119,6,0.4)', background: 'rgba(255,200,120,0.05)',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
-        '--rot': '-11deg', animation: 'frameDrop 1.3s ease 0.3s both',
-      }} />
-      <div className="absolute pointer-events-none hidden sm:block" style={{
-        top: '6%', right: '24%', width: '90px', height: '120px', borderRadius: '10px',
-        border: '1px solid rgba(217,119,6,0.35)', background: 'rgba(255,200,120,0.05)',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
-        '--rot': '13deg', animation: 'frameDrop 1.3s ease 0.45s both',
-      }} />
-      <div className="absolute pointer-events-none hidden md:block" style={{
-        bottom: '20%', left: '22%', width: '85px', height: '105px', borderRadius: '10px',
-        border: '1px solid rgba(217,119,6,0.32)', background: 'rgba(255,200,120,0.05)',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
-        '--rot': '-7deg', animation: 'frameDrop 1.3s ease 0.6s both',
-      }} />
-      <div className="absolute pointer-events-none hidden md:block" style={{
-        top: '32%', right: '6%', width: '100px', height: '130px', borderRadius: '10px',
-        border: '1px solid rgba(217,119,6,0.38)', background: 'rgba(255,200,120,0.05)',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)',
-        '--rot': '9deg', animation: 'frameDrop 1.3s ease 0.75s both',
-      }} />
 
       {/* Parallax lines */}
       <div className="absolute inset-0 pointer-events-none">
@@ -481,7 +454,7 @@ function ArtistStory() {
   const paragraphs = bio.split(/\n+/).filter(Boolean)
 
   return (
-    <section className="pt-8 pb-8 px-6">
+    <section id="artist" className="pt-8 pb-8 px-6">
       <div ref={ref} className={`max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center transition-all duration-1000 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
 
         {/* Photo block */}
