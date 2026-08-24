@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import eezhoviyamLogo from './assets/Eezhoviyam.png'
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const BG      = 'linear-gradient(135deg, #fffdf8 0%, #fdf6e8 50%, #faf0d7 100%)'
@@ -38,6 +39,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center" style={{ background: BG }}>
       <div className="w-full max-w-sm border border-amber-200 p-8 rounded-xl shadow-lg" style={{ background: CARD_BG }}>
         <div className="text-center mb-8">
+          <img src={eezhoviyamLogo} alt="Eezhoviyam" className="h-14 w-auto mx-auto mb-2" />
           <div className="text-2xl text-amber-700 mb-1" style={{ fontFamily: "'Noto Serif Tamil', serif" }}>ஈழோவியம்</div>
           <div className="text-amber-600/70 text-[10px] tracking-[0.3em] uppercase">Admin Panel</div>
         </div>
@@ -782,9 +784,12 @@ function Dashboard({ onLogout }) {
     <div className="min-h-screen" style={{ background: BG }}>
       {/* Top bar */}
       <div className="px-6 py-4 flex items-center justify-between" style={{ background: '#1c120a' }}>
-        <div>
-          <div className="text-xl text-amber-300" style={{ fontFamily: "'Noto Serif Tamil', serif" }}>ஈழோவியம்</div>
-          <div className="text-amber-500/60 text-[10px] tracking-[0.3em] uppercase">Admin Panel</div>
+        <div className="flex items-center gap-3">
+          <img src={eezhoviyamLogo} alt="Eezhoviyam" className="h-10 w-auto" />
+          <div>
+            <div className="text-xl text-amber-300" style={{ fontFamily: "'Noto Serif Tamil', serif" }}>ஈழோவியம்</div>
+            <div className="text-amber-500/60 text-[10px] tracking-[0.3em] uppercase">Admin Panel</div>
+          </div>
         </div>
         <button onClick={async () => { await supabase.auth.signOut(); onLogout() }}
           className="border border-amber-500/50 text-amber-300 text-xs tracking-widest uppercase px-5 py-2 hover:bg-amber-500/20 transition-colors rounded">
