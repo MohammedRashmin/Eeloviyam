@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import heroArt from './assets/Hero Art.svg'
+import heroArt from './assets/WhatsApp_Image_2026-08-24_at_18.12.56-removebg-preview.png'
 import butterflyArt from './assets/Butterfly_hero.svg'
+import eezhoviyamLogo from './assets/Eezhoviyam.png'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 const GALLERY = [
@@ -170,9 +171,12 @@ export function Navbar({ solid = false }) {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isSolid ? 'bg-[#1a1208]/95 backdrop-blur-md shadow-lg shadow-black/40' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/#home" className="flex flex-col leading-none">
-          <span className="font-serif text-xl font-semibold tracking-widest text-amber-300 hover:text-amber-200 transition-colors">EEZHOVIYAM</span>
-          <span className="text-amber-700/50 text-[9px] tracking-[0.3em] uppercase">ஈழோவியம் · ඊලෝවියම් · Fine Art</span>
+        <a href="/#home" className="flex items-center gap-2 leading-none">
+          <img src={eezhoviyamLogo} alt="Eezhoviyam" className="h-9 w-auto" />
+          <span className="flex flex-col leading-none">
+            <span className="font-serif text-xl font-semibold tracking-widest text-amber-300 hover:text-amber-200 transition-colors">EEZHOVIYAM</span>
+            <span className="text-amber-700/50 text-[9px] tracking-[0.3em] uppercase">ஈழோவியம் · ඊලෝවියම් · Fine Art</span>
+          </span>
         </a>
         <ul className="hidden md:flex gap-8">
           {links.map(l => <li key={l}><NavLink href={`/#${l.toLowerCase()}`}>{l}</NavLink></li>)}
@@ -234,8 +238,8 @@ function Hero() {
           alt=""
           className="h-2/5 md:h-4/5 w-auto object-contain relative z-10"
           style={{
-            filter: 'sepia(95%) saturate(280%) hue-rotate(-20deg) brightness(0.78) contrast(1.2) drop-shadow(0 0 32px rgba(180,83,9,0.55)) drop-shadow(0 0 10px rgba(253,186,116,0.28))',
-            opacity: 0.9,
+            filter: 'drop-shadow(0 0 32px rgba(180,83,9,0.55)) drop-shadow(0 0 10px rgba(253,186,116,0.28))',
+            opacity: 0.95,
           }}
         />
       </div>
@@ -1113,7 +1117,13 @@ export default function App() {
       <div className="min-h-screen bg-white">
         <Navbar />
         <Hero />
-        <div style={{ background: 'linear-gradient(180deg, #E1D8C6 0%, #D4C4A2 25%, #E1D8C6 50%, #D4C4A2 75%, #E1D8C6 100%)' }}>
+        <div style={{
+          background: `
+            radial-gradient(ellipse at 15% 0%, rgba(255,248,230,0.45) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 100%, rgba(120,90,40,0.15) 0%, transparent 50%),
+            linear-gradient(135deg, #EFE2C4 0%, #C9AD78 22%, #E6D5AC 50%, #B8985F 78%, #EFE2C4 100%)
+          `,
+        }}>
           <SelectedWorks />
           <About />
           <Gallery />
