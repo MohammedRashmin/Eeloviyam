@@ -684,7 +684,7 @@ export function ProductCard({ product, onOpen, boxed = false }) {
   const outOfStock = product.stock === 'Out of Stock'
 
   return (
-    <div className={`group ${boxed ? 'bg-white border border-amber-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300' : ''}`}>
+    <div className={`group h-full flex flex-col ${boxed ? 'bg-white border border-amber-100 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300' : ''}`}>
       <div className="relative aspect-square overflow-hidden cursor-pointer bg-[#FBF7EF]"
         onClick={() => onOpen({ ...product, title: product.name, medium: product.category }, activeImg)}>
         <img src={images[activeImg]} alt={product.name}
@@ -704,10 +704,10 @@ export function ProductCard({ product, onOpen, boxed = false }) {
           </div>
         )}
       </div>
-      <div className={boxed ? 'p-4' : 'pt-4'}>
+      <div className={`flex flex-col flex-1 ${boxed ? 'p-4' : 'pt-4'}`}>
         <h3 className="font-serif text-lg font-semibold" style={{ color: '#241A12' }}>{product.name}</h3>
         <p className="text-amber-700 text-xs tracking-wide uppercase mt-1">{product.category}</p>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-auto pt-2">
           <span className="text-zinc-500 text-sm">{formatPrice(product.price)}</span>
           <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi! I'm interested in "${product.name}".`} target="_blank" rel="noreferrer"
             onClick={e => e.stopPropagation()}
